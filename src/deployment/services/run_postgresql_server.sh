@@ -11,15 +11,12 @@
 echo "Loading Apptainer module..."
 module load Apptainer
 
-# --- Data Persistence Setup ---
-echo "Creating persistent data directory..."
-mkdir -p ./pgdata
-
 # --- Server Execution ---
 echo "Starting PostgreSQL server..."
-apptainer exec \
+
+apptainer run \
+    --writable-tmpfs \
     --env POSTGRES_PASSWORD=mysecretpassword \
-    --bind ./pgdata:/var/lib/postgresql/data \
     docker://postgres:latest &
 SERVER_PID=$!
 
