@@ -45,14 +45,13 @@ def test_chroma(host):
         
         duration = time.time() - start_time
         
-        print("\n--- Test Results ---")
-        print(f"Successfully retrieved document: {results['documents'][0]}")
-        print("--------------------")
         print(f"\nFull test (connect, add, query, delete) successful in {duration:.2f} seconds.")
+        return True
 
     except Exception as e:
         print(f"\nAn error occurred: {e}")
         print("Please check if the host IP is correct and the ChromaDB service is running.")
+        return False
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Test a running ChromaDB service.")

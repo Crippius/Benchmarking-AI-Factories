@@ -28,30 +28,63 @@ The directory structure is organized to reflect the backend architecture, separa
 ```
 .
 ├── README.md
-│── configs/              # Configuration files for services
-├── docs/                 # Project documentation, reports, and presentations
-├── examples/             # Example slurm scripts
-└── src/                  # Main source code for the backend
-    ├── benchmarks/       # Benchmark implementations (Client)
-    │   └── inference.py
-    ├── deployment/       # Scripts to deploy services (Server)
+├── configs/
+├── docs/
+├── examples/
+└── src/
+    ├── benchmarks/
+    ├── deployment/
+    │   ├── health_checks/
     │   ├── services/
-    │   │   └── run_ollama_server.sh
-    │   └── service_deployment.py
-    └── monitoring/       # Metrics collection and utilities (Monitor/Log)
+    │   │   ├── run_chromadb_server.sh
+    │   │   ├── run_ollama_server.sh
+    │   │   └── run_postgresql_server.sh
+    │   └── service_manager.py
+    └── monitoring/
 ```
-
-
 
 ---
 
 ## Tools & Stacks
 
-- **Orchestration:** Slurm ,K8s
+- **Orchestration:** Slurm
 - **Framework:** Python
-- **Inference:** vLLM
-- **Databases:** PostgreSQL 
+- **Inference:** Ollama
+- **Databases:** PostgreSQL and ChromaDB
 - **Monitoring:** Prometheus & Grafana
 - **Load Generation:** Dask, Spark
 
 ---
+
+## Getting Started
+
+We recommend using `uv` to manage the Python environment. `uv` is a fast, next-generation Python package manager and it works in HPC cluster such as MeluXina by managing python virtual environments and dependencies.
+
+### 1. Install uv
+
+To install `uv`, run the following command in your terminal:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### 2. Create and Activate the Virtual Environment
+
+Once `uv` is installed, create a virtual environment and install the project dependencies:
+
+```bash
+# Create the virtual environment
+uv venv
+
+# Activate the virtual environment
+source .venv/bin/activate
+```
+
+The required dependencies will be automatically installed from the `pyproject.toml` file.
+    
+### 3. Run the Service
+
+```bash
+python src/deployment/service_manager.py list
+python src/deployment/service_manager.py start ollama
+```

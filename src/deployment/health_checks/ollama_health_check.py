@@ -39,14 +39,13 @@ def test_ollama(host):
         # Parse the JSON response from the server
         response_data = response.json()
         
-        print("\n--- Server Response ---")
-        print(response_data.get('response', 'No response text found.'))
-        print("-----------------------")
         print(f"\nRequest successful in {duration:.2f} seconds.")
+        return True
 
     except requests.exceptions.RequestException as e:
         print(f"\nAn error occurred: {e}")
         print("Please check if the host IP is correct and the Ollama service is running.")
+        return False
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Test a running Ollama service.")

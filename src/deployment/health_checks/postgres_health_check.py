@@ -32,19 +32,20 @@ def test_postgres(host):
         cur.close()
         conn.close()
 
-        print("\n--- Test Results ---")
         if result and result[0] == 1:
-            print("Successfully received '1' from the server.")
+            print(f"\nFull test (connect, query, disconnect) successful in {duration:.2f} seconds.")
+            return True
         else:
             print("Query did not return the expected result.")
-        print("--------------------")
-        print(f"\nFull test (connect, query, disconnect) successful in {duration:.2f} seconds.")
+            return False
 
     except psycopg2.OperationalError as e:
         print(f"\nAn error occurred: {e}")
         print("Could not connect. Please check if the host IP is correct, the service is running, and wait a moment for it to initialize.")
+        return False
     except Exception as e:
         print(f"\nAn unexpected error occurred: {e}")
+        return False
 
 
 if __name__ == "__main__":
