@@ -14,10 +14,6 @@ module load Apptainer
 
 # --- Apptainer Image Setup ---
 IMAGE_FILE="ollama_latest.sif"
-if [ ! -f "$IMAGE_FImodule load Apptainer
-
-# --- Apptainer Image Setup ---
-IMAGE_FILE="ollama_latest.sif"
 if [ ! -f "$IMAGE_FILE" ]; then
     echo "Apptainer image not found. Pulling from Docker Hub..."
     apptainer pull docker://ollama/ollama
@@ -36,25 +32,4 @@ echo "Pulling the llama2 model..."
 apptainer exec --nv $IMAGE_FILE ollama pull llama2
 
 echo "Server is running with PID: $SERVER_PID. Waiting for job to finish..."
-# Wait for the server process to exit, keeping the Slurm job alive
-wait $SERVER_PID
-LE" ]; then
-    echo "Apptainer image not found. Pulling from Docker Hub..."
-    apptainer pull docker://ollama/ollama
-fi
-
-# --- Server Execution ---
-echo "Starting Ollama server in the background..."
-apptainer exec --nv $IMAGE_FILE ollama serve &
-SERVER_PID=$!
-
-echo "Waiting for server to initialize..."
-sleep 15
-
-# --- Pull Model ---
-echo "Pulling the llama2 model..."
-apptainer exec --nv $IMAGE_FILE ollama pull llama2
-
-echo "Server is running with PID: $SERVER_PID. Waiting for job to finish..."
-# Wait for the server process to exit, keeping the Slurm job alive
 wait $SERVER_PID
