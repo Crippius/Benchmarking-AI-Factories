@@ -32,12 +32,12 @@ The directory structure is organized to reflect the backend architecture, separa
 ├── docs/                 # Project documentation, reports, and presentations
 ├── examples/             # Example slurm scripts
 └── src/                  # Main source code for the backend
-    ├── benchmarks/       # Logic for each specific benchmark (Server)
-    │   ├── inference/
-    │   ├── storage/
-    │   └── vector_db/
+    ├── benchmarks/       # Benchmark implementations (Client)
+    │   └── inference.py
     ├── deployment/       # Scripts to deploy services (Server)
-    ├── load_generators/  # Dask/Spark-based load generators (Client)
+    │   ├── services/
+    │   │   └── run_ollama_server.sh
+    │   └── service_deployment.py
     └── monitoring/       # Metrics collection and utilities (Monitor/Log)
 ```
 
