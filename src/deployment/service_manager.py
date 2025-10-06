@@ -17,6 +17,7 @@ class ServiceManager:
         service_definitions = {
             "ollama": "services/run_ollama_server.sh",
             "postgresql": "services/run_postgresql_server.sh",
+            "chroma": "services/run_chromadb_server.sh",
         }
         services = {}
         for name, script_name in service_definitions.items():
