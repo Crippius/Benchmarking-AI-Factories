@@ -37,7 +37,6 @@ class ServiceManager:
             services[name] = {
                 "script": Path(__file__).parent / definition["script"],
                 "health_check": definition["health_check"],
-                "delay": definition["delay"],
             }
         return services
 

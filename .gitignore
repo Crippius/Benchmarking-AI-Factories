@@ -2,3 +2,4 @@ chroma/
 chroma_data/
 *.sif
 *.log
+__pycache__/
