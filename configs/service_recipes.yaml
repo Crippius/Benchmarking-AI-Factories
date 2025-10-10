@@ -1,0 +1,26 @@
+# Defines the available services and their default parameters.
+# These are the "recipes" for what can be deployed.
+ollama:
+  script: "services/run_ollama_server.sh"
+  health_check: "ollama"
+  default_params:
+    OLLAMA_MODEL: "qwen3:0.6b" # This can be overridden at runtime
+    partition: "gpu"
+    nodes: 1
+    time: "01:00:00"
+
+postgresql:
+  script: "services/run_postgresql_server.sh"
+  health_check: "postgres"
+  default_params:
+    partition: "cpu"
+    nodes: 1
+    time: "01:00:00"
+
+chroma:
+  script: "services/run_chromadb_server.sh"
+  health_check: "chroma"
+  default_params:
+    partition: "cpu"
+    nodes: 1
+    time: "01:00:00"

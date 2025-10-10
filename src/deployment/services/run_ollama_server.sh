@@ -28,8 +28,8 @@ echo "Waiting for server to initialize..."
 sleep 15
 
 # --- Pull Model ---
-echo "Pulling the llama2 model..."
-apptainer exec --nv $IMAGE_FILE ollama pull llama2
+echo "Pulling the ${OLLAMA_MODEL} model..."
+apptainer exec --nv $IMAGE_FILE ollama pull ${OLLAMA_MODEL}
 
 echo "Server is running with PID: $SERVER_PID. Waiting for job to finish..."
 wait $SERVER_PID

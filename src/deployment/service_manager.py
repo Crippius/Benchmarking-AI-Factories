@@ -3,42 +3,29 @@ import subprocess
 import re
 from pathlib import Path
 import time
+import yaml
+import os
+
+# Health check functions need to be available to be mapped from the config file
 from health_checks.chroma_health_check import test_chroma
 from health_checks.ollama_health_check import test_ollama
 from health_checks.postgres_health_check import test_postgres
 
 class ServiceManager:
-    """Discovers, deploys, and manages services on Slurm."""
+    """Discovers, deploys, and manages services on Slurm using a central config."""
 
-    def __init__(self):
-        self.services = self._discover_services()
-
-    def _discover_services(self):
-        """
-        Identifies available service scripts in the 'services' subdirectory.
-        Returns a dictionary mapping service names to their script paths.
-        """
-        service_definitions = {
-            "ollama": {
-                "script": "services/run_ollama_server.sh",
-                "health_check": test_ollama,
-            },
-            "postgresql": {
-                "script": "services/run_postgresql_server.sh",
-                "health_check": test_postgres,
-            },
-            "chroma": {
-                "script": "services/run_chromadb_server.sh",
-                "health_check": test_chroma,
-            },
+    def __init__(self, services_config_path="configs/service_recipes.yaml"):
+        # Load configs
+        base_path = Path(__file__).parent.parent.parent
+        with open(base_path / services_config_path, "r") as f:
+            self.services = yaml.safe_load(f)
+        
+        # Health check mapping
+        self.health_check_mapping = {
+            "ollama": test_ollama,
+            "postgres": test_postgres,
+            "chroma": test_chroma,
         }
-        services = {}
-        for name, definition in service_definitions.items():
-            services[name] = {
-                "script": Path(__file__).parent / definition["script"],
-                "health_check": definition["health_check"],
-            }
-        return services
 
     def _get_job_node(self, job_id):
         """
@@ -55,7 +42,6 @@ class ServiceManager:
                     capture_output=True, text=True, check=True
                 )
                 
-                # FIX: Use a more robust method to parse the scontrol output
                 job_info = {}
                 for item in result.stdout.split():
                     if "=" in item:
@@ -80,20 +66,55 @@ class ServiceManager:
         return None
 
 
-    def start_service(self, service_name):
+    def start_service(self, service_name, overrides=None):
         """
-        Submits a service script to Slurm using the 'sbatch' command,
-        waits for the service to start, and then runs a health check.
+        Constructs and submits a service script to Slurm using sbatch,
+        based on the central config. Overrides allow for dynamic parameter changes.
         """
+        if overrides is None:
+            overrides = {}
+
         service_info = self.services.get(service_name)
-        if not service_info or not service_info["script"].is_file():
-            print(f"Error: Service '{service_name}' or its script not found.")
+        if not service_info:
+            print(f"Error: Service '{service_name}' not found in config.")
             return
 
+        # --- Prepare sbatch command and environment variables ---
+        params = service_info.get("default_params", {}).copy()
+        params.update(overrides)
+
+        sbatch_args = ["sbatch"]
+        job_env_vars = {}  # Custom environment variables to pass to the job
+
+        # Separate sbatch params from environment variables
+        sbatch_params = ["partition", "nodes", "time", "gres"]
+        for key, value in params.items():
+            if key in sbatch_params:
+                sbatch_args.append(f"--{key}={value}")
+            else:
+                job_env_vars[key] = str(value)
+        
+        # Export environment variables to the job using --export
+        # ALL means inherit all environment variables, then we add/override our custom ones
+        if job_env_vars:
+            export_string = ",".join([f"{k}={v}" for k, v in job_env_vars.items()])
+            sbatch_args.append(f"--export=ALL,{export_string}")
+        
+        script_path = Path(__file__).parent / service_info["script"]
+        if not script_path.is_file():
+            print(f"Error: Script for service '{service_name}' not found at {script_path}")
+            return
+
+        sbatch_args.append(str(script_path))
+
         print(f"Submitting job for service '{service_name}'...")
+        print(f"  Command: {' '.join(sbatch_args)}")
+        print(f"  Custom Environment Variables: {job_env_vars}")
+
+
         try:
             process = subprocess.run(
-                ["sbatch", str(service_info["script"])],
+                sbatch_args,
                 capture_output=True, text=True, check=True
             )
             match = re.search(r"Submitted batch job (\d+)", process.stdout)
@@ -109,15 +130,24 @@ class ServiceManager:
                 print("Could not determine the job's node. Skipping health check.")
                 return
 
-            print(f"Running health check for {service_name} on node {node}...")
-            health_check_func = service_info["health_check"]
-            if health_check_func(node):
-                print(f"Health check for {service_name} passed!")
+            health_check_name = service_info.get("health_check")
+            health_check_func = self.health_check_mapping.get(health_check_name)
+
+            if health_check_func:
+                print(f"Running health check for {service_name} on node {node}...")
+                if health_check_func(node):
+                    print(f"Health check for {service_name} passed!")
+                else:
+                    print(f"Health check for {service_name} failed.")
             else:
-                print(f"Health check for {service_name} failed.")
+                print(f"No health check defined for service '{service_name}'.")
+
 
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
             print(f"Error starting service: {e}")
+            if isinstance(e, subprocess.CalledProcessError):
+                print(f"Stderr: {e.stderr}")
+
 
     def stop_service(self, job_id):
         """
@@ -163,15 +193,16 @@ class ServiceManager:
 if __name__ == "__main__":
     manager = ServiceManager()
     parser = argparse.ArgumentParser(
-        description="A CLI tool to manage services on a Slurm cluster.",
+        description="A CLI tool to manage services on a Slurm cluster based on a config file.",
         formatter_class=argparse.RawTextHelpFormatter
     )
-    # This script is now compatible with older Python versions
-    subparsers = parser.add_subparsers(dest="command")
+    subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Define 'start' command
     start_parser = subparsers.add_parser("start", help="Start a service by name.")
     start_parser.add_argument("service_name", choices=list(manager.services.keys()), help="Name of the service to start.")
+    start_parser.add_argument("--override", action="append", help="Override a default parameter, e.g., --override OLLAMA_MODEL=qwen3:8b")
+
 
     # Define 'stop' command
     stop_parser = subparsers.add_parser("stop", help="Stop a running service by its Slurm Job ID.")
@@ -189,11 +220,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     
-    # Manually check if a command was provided for older Python versions
-    if not args.command:
-        parser.print_help()
-    elif args.command == "start":
-        manager.start_service(args.service_name)
+    if args.command == "start":
+        overrides = {}
+        if args.override:
+            for override in args.override:
+                if "=" not in override:
+                    print(f"Invalid override format: {override}. Use KEY=VALUE.")
+                    continue
+                key, value = override.split("=", 1)
+                overrides[key] = value
+        manager.start_service(args.service_name, overrides)
     elif args.command == "stop":
         manager.stop_service(args.job_id)
     elif args.command == "list":
