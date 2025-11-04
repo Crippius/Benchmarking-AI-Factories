@@ -55,8 +55,8 @@ class BenchmarkManager:
         params = recipe.get("default_params", {}).copy()
         params.update(overrides)
 
-        log_dir = self.base_path / "src" / "benchmarking" / "logs"
-        log_dir.mkdir(exist_ok=True)
+        log_dir = self.base_path / "results" / "benchmarks"
+        log_dir.mkdir(parents=True, exist_ok=True)
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         log_file = log_dir / f"{benchmark_name}_{job_id}_{timestamp}.json"
 

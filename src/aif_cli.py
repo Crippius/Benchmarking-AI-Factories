@@ -13,6 +13,8 @@ from common.config_loader import ConfigLoader
 from common.job_tracker import JobTracker
 from deployment.service_manager import ServiceManager
 from benchmarking.benchmark_manager import BenchmarkManager
+from monitoring.monitor_manager import MonitorManager
+from results.result_manager import ResultManager
 
 
 class AIFactoryCLI:
@@ -24,6 +26,8 @@ class AIFactoryCLI:
         self.job_tracker = JobTracker()
         self.service_manager = ServiceManager(job_tracker=self.job_tracker)
         self.benchmark_manager = BenchmarkManager(job_tracker=self.job_tracker)
+        self.monitor_manager = MonitorManager(job_tracker=self.job_tracker)
+        self.result_manager = ResultManager(job_tracker=self.job_tracker)
     
     def run(self):
         """Run the CLI with argument parsing."""
@@ -40,6 +44,12 @@ class AIFactoryCLI:
         
         # Benchmark commands
         self._add_benchmark_commands(subparsers)
+        
+        # Monitor commands
+        self._add_monitor_commands(subparsers)
+        
+        # Results commands
+        self._add_results_commands(subparsers)
         
         # Parse and execute
         args = parser.parse_args()
@@ -91,12 +101,52 @@ class AIFactoryCLI:
         results_parser = benchmark_subparsers.add_parser("results", help="Show benchmark results")
         results_parser.add_argument("log_file", help="Path to the benchmark log file")
     
+    def _add_monitor_commands(self, subparsers):
+        """Add monitoring commands."""
+        monitor_parser = subparsers.add_parser("monitor", help="Monitoring commands")
+        monitor_subparsers = monitor_parser.add_subparsers(dest="monitor_command", required=True)
+        
+        # monitor start
+        start_parser = monitor_subparsers.add_parser("start", help="Start monitoring a service")
+        start_parser.add_argument("service_name", help="Name of the service to monitor")
+        start_parser.add_argument("--job-id", required=True, help="Service job ID")
+        start_parser.add_argument("--duration", type=int, default=300, help="Duration in seconds (default: 300)")
+        start_parser.add_argument("--interval", type=int, default=5, help="Interval in seconds (default: 5)")
+        
+        # monitor list
+        monitor_subparsers.add_parser("list", help="List available monitors")
+        
+        # monitor results
+        results_parser = monitor_subparsers.add_parser("results", help="Show monitoring results")
+        results_parser.add_argument("log_file", help="Path to the monitoring log file")
+    
+    def _add_results_commands(self, subparsers):
+        """Add results management commands."""
+        results_parser = subparsers.add_parser("results", help="Results management commands")
+        results_subparsers = results_parser.add_subparsers(dest="results_command", required=True)
+        
+        # results list
+        list_parser = results_subparsers.add_parser("list", help="List all result files")
+        list_parser.add_argument("--type", choices=['benchmark', 'monitor'], help="Filter by type")
+        
+        # results show
+        show_parser = results_subparsers.add_parser("show", help="Show specific result file")
+        show_parser.add_argument("log_file", help="Path to the result file")
+        
+        # results summary
+        summary_parser = results_subparsers.add_parser("summary", help="Show summary for a job")
+        summary_parser.add_argument("--job-id", required=True, help="Job ID to summarize")
+    
     def _execute_command(self, args):
         """Execute the parsed command."""
         if args.command == "service":
             self._execute_service_command(args)
         elif args.command == "benchmark":
             self._execute_benchmark_command(args)
+        elif args.command == "monitor":
+            self._execute_monitor_command(args)
+        elif args.command == "results":
+            self._execute_results_command(args)
     
     def _execute_service_command(self, args):
         """Execute service commands."""
@@ -130,6 +180,33 @@ class AIFactoryCLI:
         
         elif args.benchmark_command == "results":
             self.benchmark_manager.show_results(args.log_file)
+    
+    def _execute_monitor_command(self, args):
+        """Execute monitoring commands."""
+        if args.monitor_command == "start":
+            self.monitor_manager.start_monitor(
+                args.service_name,
+                args.job_id,
+                duration=args.duration,
+                interval=args.interval
+            )
+        
+        elif args.monitor_command == "list":
+            self.monitor_manager.list_monitors()
+        
+        elif args.monitor_command == "results":
+            self.monitor_manager.show_results(args.log_file)
+    
+    def _execute_results_command(self, args):
+        """Execute results commands."""
+        if args.results_command == "list":
+            self.result_manager.list_results(result_type=args.type)
+        
+        elif args.results_command == "show":
+            self.result_manager.show_result(args.log_file)
+        
+        elif args.results_command == "summary":
+            self.result_manager.get_job_summary(args.job_id)
     
     def _parse_overrides(self, override_list):
         """Parse override arguments into a dictionary."""

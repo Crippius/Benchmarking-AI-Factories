@@ -173,7 +173,59 @@ Run commands from the project root directory:
 ./aif-cli benchmark results <path_to_log_file>
 ```
 
-### 4. Legacy Commands (Still Supported)
+#### Monitoring Services
+
+```bash
+# List available monitors
+./aif-cli monitor list
+
+# Start monitoring a service (runs in background)
+./aif-cli monitor start ollama --job-id <service_job_id> --duration 300
+
+# Monitor with custom parameters
+./aif-cli monitor start ollama --job-id <job_id> --duration 600 --interval 10
+
+# View monitoring results
+./aif-cli monitor results <path_to_log_file>
+```
+
+#### Viewing Results
+
+```bash
+# List all results (benchmarks and monitoring)
+./aif-cli results list
+
+# List only benchmarks
+./aif-cli results list --type benchmark
+
+# Show specific result file
+./aif-cli results show <log_file>
+
+# Get complete summary for a job
+./aif-cli results summary --job-id <job_id>
+```
+
+### 4. Complete Workflow Example
+
+```bash
+# 1. Start a service
+./aif-cli service start ollama
+# Note the job ID (e.g., 12345)
+
+# 2. Start monitoring in background
+./aif-cli monitor start ollama --job-id 12345 --duration 300 &
+
+# 3. Run benchmarks
+./aif-cli benchmark run ollama_latency --job-id 12345
+
+# 4. View all results for the job
+./aif-cli results summary --job-id 12345
+
+# 5. Stop service
+./aif-cli service stop 12345
+```
+
+### 5. Legacy Commands (Still Supported)
 
 You can still use the individual managers directly if needed:
 
