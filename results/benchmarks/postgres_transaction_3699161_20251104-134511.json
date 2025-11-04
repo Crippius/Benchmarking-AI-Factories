@@ -1,0 +1,24 @@
+{
+    "metadata": {
+        "benchmark_name": "postgres_transaction",
+        "timestamp": "2025-11-04T13:45:11.421165",
+        "host": "mel0278",
+        "total_benchmark_duration": 0.1730661392211914
+    },
+    "configuration": {
+        "transactions": 1000
+    },
+    "transaction_operation": {
+        "total_transactions": 1000,
+        "duration": 0.16069626808166504,
+        "transactions_per_sec": 6222.9198719898395,
+        "avg_transaction_time": 0.00016055607795715333,
+        "min_transaction_time": 0.00013136863708496094,
+        "max_transaction_time": 0.0005784034729003906
+    },
+    "summary": {
+        "tps": 6222.9198719898395,
+        "total_duration": 0.16069626808166504,
+        "avg_latency_ms": 0.16055607795715332
+    }
+}

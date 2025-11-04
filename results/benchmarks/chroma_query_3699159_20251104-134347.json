@@ -1,0 +1,29 @@
+{
+    "metadata": {
+        "benchmark_name": "chroma_query",
+        "timestamp": "2025-11-04T13:43:50.349323",
+        "host": "mel0144",
+        "collection_name": "query_benchmark",
+        "total_benchmark_duration": 2.56023907661438
+    },
+    "configuration": {
+        "documents_in_collection": 1000,
+        "n_results_requested": 10
+    },
+    "insert_operation": {
+        "documents": 1000,
+        "duration": 0.8106362819671631,
+        "throughput_docs_per_sec": 1233.5988682536017
+    },
+    "query_operation": {
+        "duration": 0.11099123954772949,
+        "results_returned": 10,
+        "latency_ms": 110.99123954772949
+    },
+    "summary": {
+        "query_latency": 0.11099123954772949,
+        "query_latency_ms": 110.99123954772949,
+        "documents_queried": 1000,
+        "results_per_query": 10
+    }
+}

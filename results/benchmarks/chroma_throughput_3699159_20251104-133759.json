@@ -1,0 +1,14 @@
+{
+    "write": {
+        "operation": "write",
+        "documents": 1000,
+        "duration": 266.8270266056061,
+        "throughput": 3.7477462936244774
+    },
+    "read": {
+        "operation": "read",
+        "documents": 1000,
+        "duration": 0.029675722122192383,
+        "throughput": 33697.579316938354
+    }
+}

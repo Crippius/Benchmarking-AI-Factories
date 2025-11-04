@@ -1,0 +1,32 @@
+{
+    "metadata": {
+        "benchmark_name": "postgres_throughput",
+        "timestamp": "2025-11-04T13:45:04.175165",
+        "host": "mel0278",
+        "table_name": "benchmark_table",
+        "total_benchmark_duration": 0.07090330123901367
+    },
+    "configuration": {
+        "rows": 1000
+    },
+    "write_operation": {
+        "rows": 1000,
+        "duration": 0.05359601974487305,
+        "throughput_rows_per_sec": 18658.101940408724,
+        "avg_time_per_row": 5.359601974487305e-05
+    },
+    "read_operation": {
+        "rows_requested": 1000,
+        "rows_retrieved": 1000,
+        "duration": 0.000682830810546875,
+        "throughput_rows_per_sec": 1464491.6201117318,
+        "avg_time_per_row": 6.82830810546875e-07
+    },
+    "summary": {
+        "total_operations": 2,
+        "total_rows_processed": 2000,
+        "write_throughput": 18658.101940408724,
+        "read_throughput": 1464491.6201117318,
+        "read_write_ratio": 78.4909217877095
+    }
+}
