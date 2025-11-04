@@ -1,0 +1,7 @@
+{
+    "total_requests": 10,
+    "successful_requests": 10,
+    "min_latency": 3.6942262649536133,
+    "max_latency": 6.501233339309692,
+    "avg_latency": 4.878851461410522
+}

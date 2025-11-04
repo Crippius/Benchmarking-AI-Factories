@@ -10,8 +10,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from common.config_loader import ConfigLoader
 from monitoring.services.ollama_monitor import OllamaMonitor
-from monitoring.services.chroma_monitor import ChromaMonitor
-from monitoring.services.postgres_monitor import PostgresMonitor
+# Lazy import for heavy libraries
+# from monitoring.services.chroma_monitor import ChromaMonitor
+# from monitoring.services.postgres_monitor import PostgresMonitor
 
 
 class MonitorManager:
@@ -23,12 +24,35 @@ class MonitorManager:
         self.job_tracker = job_tracker
         self.active_monitors = {}  # Store running monitor threads
         
-        # Monitor type mapping
+        # Monitor type mapping - use lazy loading for heavy imports
         self.monitor_types = {
             "ollama": OllamaMonitor,
-            "chroma": ChromaMonitor,
-            "postgres": PostgresMonitor,
+            "chroma": "monitoring.services.chroma_monitor.ChromaMonitor",  # Lazy load
+            "postgres": "monitoring.services.postgres_monitor.PostgresMonitor",  # Lazy load
         }
+    
+    def _get_monitor_class(self, service_name):
+        """Get monitor class with lazy loading."""
+        monitor_ref = self.monitor_types.get(service_name)
+        
+        if monitor_ref is None:
+            return None
+        
+        # If it's already a class, return it
+        if not isinstance(monitor_ref, str):
+            return monitor_ref
+        
+        # Lazy load the class
+        try:
+            module_path, class_name = monitor_ref.rsplit(".", 1)
+            module = __import__(module_path, fromlist=[class_name])
+            monitor_class = getattr(module, class_name)
+            # Cache it for next time
+            self.monitor_types[service_name] = monitor_class
+            return monitor_class
+        except Exception as e:
+            print(f"Error loading monitor class: {e}")
+            return None
     
     def list_monitors(self):
         """List available monitor types."""

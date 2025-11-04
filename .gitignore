@@ -3,3 +3,4 @@ chroma_data/
 *.sif
 *.log
 __pycache__/
+.aif_jobs.json

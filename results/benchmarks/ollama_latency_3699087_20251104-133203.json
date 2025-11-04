@@ -1,0 +1,159 @@
+{
+    "metadata": {
+        "benchmark_name": "ollama_latency",
+        "timestamp": "2025-11-04T13:32:52.792717",
+        "host": "mel2166",
+        "model": "llama2",
+        "prompt": "What is a supercomputer?",
+        "total_benchmark_duration": 49.074737310409546
+    },
+    "configuration": {
+        "num_requests": 10,
+        "stream": false
+    },
+    "summary": {
+        "total_requests": 10,
+        "successful_requests": 10,
+        "failed_requests": 0,
+        "min_latency": 3.6342482566833496,
+        "max_latency": 11.00821328163147,
+        "avg_latency": 4.896883749961853,
+        "median_latency": 4.119828701019287,
+        "stddev_latency": 2.1944916979372637,
+        "p95_latency": 13.740781843662262,
+        "p99_latency": 16.41262665987015,
+        "throughput_rps": 0.2037708309419486
+    },
+    "requests": [
+        {
+            "request_id": 1,
+            "timestamp": "2025-11-04T13:32:03.717981",
+            "status": "success",
+            "latency": 11.00821328163147,
+            "response_length": 2853,
+            "eval_count": 628,
+            "eval_duration": 4089342439,
+            "load_duration": 6091339169,
+            "prompt_eval_count": 27,
+            "prompt_eval_duration": 134399994,
+            "total_duration": 10315662892
+        },
+        {
+            "request_id": 2,
+            "timestamp": "2025-11-04T13:32:14.814194",
+            "status": "success",
+            "latency": 4.095810174942017,
+            "response_length": 2821,
+            "eval_count": 591,
+            "eval_duration": 3810039189,
+            "load_duration": 43883057,
+            "prompt_eval_count": 27,
+            "prompt_eval_duration": 3229145,
+            "total_duration": 3857846271
+        },
+        {
+            "request_id": 3,
+            "timestamp": "2025-11-04T13:32:18.908202",
+            "status": "success",
+            "latency": 4.835329055786133,
+            "response_length": 2544,
+            "eval_count": 564,
+            "eval_duration": 4780965344,
+            "load_duration": 43300566,
+            "prompt_eval_count": 27,
+            "prompt_eval_duration": 3989565,
+            "total_duration": 4828857786
+        },
+        {
+            "request_id": 4,
+            "timestamp": "2025-11-04T13:32:23.743700",
+            "status": "success",
+            "latency": 3.7903263568878174,
+            "response_length": 2587,
+            "eval_count": 540,
+            "eval_duration": 3480927103,
+            "load_duration": 299185369,
+            "prompt_eval_count": 27,
+            "prompt_eval_duration": 3064524,
+            "total_duration": 3783861576
+        },
+        {
+            "request_id": 5,
+            "timestamp": "2025-11-04T13:32:27.534246",
+            "status": "success",
+            "latency": 3.773712158203125,
+            "response_length": 2480,
+            "eval_count": 548,
+            "eval_duration": 3555519425,
+            "load_duration": 36622315,
+            "prompt_eval_count": 27,
+            "prompt_eval_duration": 4721226,
+            "total_duration": 3597520777
+        },
+        {
+            "request_id": 6,
+            "timestamp": "2025-11-04T13:32:31.317433",
+            "status": "success",
+            "latency": 4.655702114105225,
+            "response_length": 3138,
+            "eval_count": 665,
+            "eval_duration": 4559519182,
+            "load_duration": 41957482,
+            "prompt_eval_count": 27,
+            "prompt_eval_duration": 4170996,
+            "total_duration": 4606227160
+        },
+        {
+            "request_id": 7,
+            "timestamp": "2025-11-04T13:32:35.972946",
+            "status": "success",
+            "latency": 4.1005859375,
+            "response_length": 2748,
+            "eval_count": 610,
+            "eval_duration": 3960534435,
+            "load_duration": 131303121,
+            "prompt_eval_count": 27,
+            "prompt_eval_duration": 2754253,
+            "total_duration": 4095241450
+        },
+        {
+            "request_id": 8,
+            "timestamp": "2025-11-04T13:32:40.073698",
+            "status": "success",
+            "latency": 4.139071464538574,
+            "response_length": 3026,
+            "eval_count": 605,
+            "eval_duration": 3941694981,
+            "load_duration": 38933848,
+            "prompt_eval_count": 27,
+            "prompt_eval_duration": 4363806,
+            "total_duration": 3985631875
+        },
+        {
+            "request_id": 9,
+            "timestamp": "2025-11-04T13:32:44.222677",
+            "status": "success",
+            "latency": 4.93583869934082,
+            "response_length": 3263,
+            "eval_count": 745,
+            "eval_duration": 4842459432,
+            "load_duration": 39281918,
+            "prompt_eval_count": 27,
+            "prompt_eval_duration": 4802356,
+            "total_duration": 4887167347
+        },
+        {
+            "request_id": 10,
+            "timestamp": "2025-11-04T13:32:49.158293",
+            "status": "success",
+            "latency": 3.6342482566833496,
+            "response_length": 2625,
+            "eval_count": 554,
+            "eval_duration": 3585896212,
+            "load_duration": 37075666,
+            "prompt_eval_count": 27,
+            "prompt_eval_duration": 4438026,
+            "total_duration": 3627998214
+        }
+    ]
+}

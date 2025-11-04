@@ -62,7 +62,7 @@ class BenchmarkManager:
 
         try:
             script_name = recipe['script']
-            module_name = f"benchmarks.{script_name.replace('.py', '')}"
+            module_name = f"benchmarking.benchmarks.{script_name.replace('.py', '')}"
             
             print(f"Running benchmark '{benchmark_name}' on node {node}...")
             print(f"Logging results to {log_file}")
