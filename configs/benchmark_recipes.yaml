@@ -1,0 +1,43 @@
+
+ollama_latency:
+  script: "ollama_benchmark.py"
+  description: "Measures the latency of Ollama for a number of requests."
+  default_params:
+    model: "llama2"
+    prompt: "What is a supercomputer?"
+    requests: 10
+
+ollama_streaming:
+  script: "ollama_benchmark.py"
+  description: "Measures TTFT and tokens/sec for streaming with Ollama."
+  default_params:
+    model: "llama2"
+    prompt: "Write a short story about a robot."
+
+chroma_throughput:
+  script: "chroma_benchmark.py"
+  description: "Measures write and read throughput of ChromaDB."
+  default_params:
+    collection_name: "benchmark_collection"
+    documents: 1000
+
+chroma_query:
+  script: "chroma_benchmark.py"
+  description: "Measures query performance of ChromaDB."
+  default_params:
+    collection_name: "query_benchmark"
+    documents: 1000
+    n_results: 10
+
+postgres_throughput:
+  script: "postgres_benchmark.py"
+  description: "Measures write and read throughput of PostgreSQL."
+  default_params:
+    table_name: "benchmark_table"
+    rows: 1000
+
+postgres_transaction:
+  script: "postgres_benchmark.py"
+  description: "Measures transaction per second of PostgreSQL."
+  default_params:
+    transactions: 1000
