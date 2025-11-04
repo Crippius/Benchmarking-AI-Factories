@@ -5,20 +5,31 @@ from pathlib import Path
 import time
 import yaml
 import os
+import sys
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Health check functions need to be available to be mapped from the config file
-from health_checks.chroma_health_check import test_chroma
-from health_checks.ollama_health_check import test_ollama
-from health_checks.postgres_health_check import test_postgres
+from deployment.health_checks.chroma_health_check import test_chroma
+from deployment.health_checks.ollama_health_check import test_ollama
+from deployment.health_checks.postgres_health_check import test_postgres
+
+# Import common utilities
+from common.slurm_utils import get_job_node, cancel_job, get_job_status, list_user_jobs
+from common.config_loader import ConfigLoader
 
 class ServiceManager:
     """Discovers, deploys, and manages services on Slurm using a central config."""
 
-    def __init__(self, services_config_path="configs/service_recipes.yaml"):
+    def __init__(self, services_config_path="configs/service_recipes.yaml", job_tracker=None):
         # Load configs
-        base_path = Path(__file__).parent.parent.parent
-        with open(base_path / services_config_path, "r") as f:
-            self.services = yaml.safe_load(f)
+        self.base_path = Path(__file__).parent.parent.parent
+        config_loader = ConfigLoader(self.base_path)
+        self.services = config_loader.load_services()
+        
+        # Job tracker (optional)
+        self.job_tracker = job_tracker
         
         # Health check mapping
         self.health_check_mapping = {
@@ -26,45 +37,6 @@ class ServiceManager:
             "postgres": test_postgres,
             "chroma": test_chroma,
         }
-
-    def _get_job_node(self, job_id):
-        """
-        Retrieves the node where a Slurm job is running.
-        It waits for the job to be in a running state.
-        """
-        print(f"Waiting for job {job_id} to start and get a node...")
-        start_time = time.time()
-        # Increased timeout to 300 seconds (5 minutes) for busy clusters
-        while time.time() - start_time < 300:
-            try:
-                result = subprocess.run(
-                    ["scontrol", "show", "job", job_id],
-                    capture_output=True, text=True, check=True
-                )
-                
-                job_info = {}
-                for item in result.stdout.split():
-                    if "=" in item:
-                        key, value = item.split("=", 1)
-                        job_info[key] = value
-
-                job_state = job_info.get("JobState")
-                if job_state == "RUNNING":
-                    node = job_info.get("NodeList")
-                    if node and node != "(null)":
-                        print(f"Job {job_id} is running on node {node}.")
-                        return node
-                elif job_state not in ("PENDING", "CONFIGURING"):
-                    print(f"Job {job_id} is in state {job_state}, not RUNNING.")
-                    return None
-                
-                time.sleep(5)  # Wait 5 seconds before checking again
-            except (subprocess.CalledProcessError, FileNotFoundError) as e:
-                print(f"Error checking job {job_id}: {e.stderr.strip()}")
-                return None
-        print(f"Timeout waiting for job {job_id} to start.")
-        return None
-
 
     def start_service(self, service_name, overrides=None):
         """
@@ -103,14 +75,13 @@ class ServiceManager:
         script_path = Path(__file__).parent / service_info["script"]
         if not script_path.is_file():
             print(f"Error: Script for service '{service_name}' not found at {script_path}")
-            return
+            return None
 
         sbatch_args.append(str(script_path))
 
         print(f"Submitting job for service '{service_name}'...")
         print(f"  Command: {' '.join(sbatch_args)}")
         print(f"  Custom Environment Variables: {job_env_vars}")
-
 
         try:
             process = subprocess.run(
@@ -120,15 +91,28 @@ class ServiceManager:
             match = re.search(r"Submitted batch job (\d+)", process.stdout)
             if not match:
                 print(f"Could not parse Job ID from sbatch output: {process.stdout.strip()}")
-                return
+                return None
 
             job_id = match.group(1)
             print(f"Job submitted successfully! Job ID: {job_id}")
+            
+            # Track job if tracker is available
+            if self.job_tracker:
+                self.job_tracker.add_job(
+                    job_id=job_id,
+                    job_type="service",
+                    service_name=service_name,
+                    config=params
+                )
 
-            node = self._get_job_node(job_id)
+            node = get_job_node(job_id)
             if not node:
                 print("Could not determine the job's node. Skipping health check.")
-                return
+                return job_id
+            
+            # Update tracker with node info
+            if self.job_tracker:
+                self.job_tracker.update_job(job_id, node=node)
 
             health_check_name = service_info.get("health_check")
             health_check_func = self.health_check_mapping.get(health_check_name)
@@ -137,16 +121,22 @@ class ServiceManager:
                 print(f"Running health check for {service_name} on node {node}...")
                 if health_check_func(node):
                     print(f"Health check for {service_name} passed!")
+                    if self.job_tracker:
+                        self.job_tracker.update_job(job_id, status="healthy")
                 else:
                     print(f"Health check for {service_name} failed.")
+                    if self.job_tracker:
+                        self.job_tracker.update_job(job_id, status="unhealthy")
             else:
                 print(f"No health check defined for service '{service_name}'.")
-
+            
+            return job_id
 
         except (subprocess.CalledProcessError, FileNotFoundError) as e:
             print(f"Error starting service: {e}")
             if isinstance(e, subprocess.CalledProcessError):
                 print(f"Stderr: {e.stderr}")
+            return None
 
 
     def stop_service(self, job_id):
@@ -154,11 +144,12 @@ class ServiceManager:
         Stops a running job using the 'scancel' command.
         """
         print(f"Stopping job {job_id}...")
-        try:
-            subprocess.run(["scancel", job_id], check=True, capture_output=True, text=True)
+        if cancel_job(job_id):
             print(f"Job {job_id} cancelled successfully.")
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            print(f"Error stopping service {job_id}: {e.stderr.strip()}")
+            if self.job_tracker:
+                self.job_tracker.update_job(job_id, status="stopped")
+        else:
+            print(f"Failed to cancel job {job_id}.")
 
     def list_services(self):
         """
@@ -173,22 +164,47 @@ class ServiceManager:
         Lists jobs for the current user using 'squeue --me'.
         """
         print("Currently running/pending services (squeue --me):")
-        try:
-            result = subprocess.run(["squeue", "--me"], check=True, text=True, capture_output=True)
-            print(result.stdout)
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            print(f"Error listing running services: {e.stderr.strip()}")
+        output = list_user_jobs()
+        if output:
+            print(output)
 
     def check_service(self, job_id):
         """
         Shows detailed information for a specific job using 'scontrol show job'.
         """
         print(f"Checking status of job {job_id}...")
-        try:
-            result = subprocess.run(["scontrol", "show", "job", job_id], check=True, text=True, capture_output=True)
-            print(result.stdout)
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            print(f"Error checking service {job_id}: {e.stderr.strip()}")
+        output = get_job_status(job_id)
+        if output:
+            print(output)
+    
+    def show_logs(self, job_id):
+        """
+        Show logs for a job by finding and displaying the log file.
+        """
+        # Try to find log files matching the job ID
+        log_patterns = [
+            f"*_{job_id}.log",
+            f"slurm-{job_id}.out"
+        ]
+        
+        found_logs = []
+        for pattern in log_patterns:
+            logs = list(self.base_path.glob(pattern))
+            logs.extend(list((self.base_path / "src" / "deployment").glob(pattern)))
+            found_logs.extend(logs)
+        
+        if not found_logs:
+            print(f"No log files found for job {job_id}")
+            print(f"Tried patterns: {log_patterns}")
+            return
+        
+        for log_file in found_logs:
+            print(f"\n=== Log: {log_file.name} ===")
+            try:
+                with open(log_file, "r") as f:
+                    print(f.read())
+            except Exception as e:
+                print(f"Error reading log file: {e}")
 
 if __name__ == "__main__":
     manager = ServiceManager()

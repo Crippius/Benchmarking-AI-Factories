@@ -5,7 +5,7 @@ ollama_latency:
   default_params:
     model: "llama2"
     prompt: "What is a supercomputer?"
-    requests: 10
+    num_requests: 10
 
 ollama_streaming:
   script: "ollama_benchmark.py"

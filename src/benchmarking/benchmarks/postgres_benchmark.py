@@ -117,7 +117,8 @@ BENCHMARKS = {
 }
 
 def run(host, log_file, benchmark_name, **params):
+    """Main entry point for running benchmarks."""
     if benchmark_name in BENCHMARKS:
-        BENCHMARKS[benchmark_name](host=host, log_file=log_file, benchmark_name=benchmark_name, **params)
+        BENCHMARKS[benchmark_name](host=host, log_file=log_file, **params)
     else:
         print(f"Unknown benchmark: {benchmark_name}")

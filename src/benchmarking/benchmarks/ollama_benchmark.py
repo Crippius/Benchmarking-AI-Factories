@@ -1,4 +1,4 @@
-import requests
+import requests as http_requests
 import time
 import json
 
@@ -6,7 +6,7 @@ def _save_results(log_file, results):
     with open(log_file, 'w') as f:
         json.dump(results, f, indent=4)
 
-def run_latency(host, model, prompt, requests as num_requests, log_file, **kwargs):
+def run_latency(host, model, prompt, num_requests, log_file, **kwargs):
     """Runs a latency benchmark against an Ollama service."""
     print(f"Starting Ollama latency benchmark on {host}...")
     print(f"Model: {model}, Prompt: '{prompt}', Requests: {num_requests}")
@@ -24,13 +24,13 @@ def run_latency(host, model, prompt, requests as num_requests, log_file, **kwarg
     for i in range(int(num_requests)):
         try:
             start_time = time.time()
-            response = requests.post(api_url, json=payload, timeout=300)
+            response = http_requests.post(api_url, json=payload, timeout=300)
             response.raise_for_status()
             end_time = time.time()
             latency = end_time - start_time
             latencies.append(latency)
             print(f"Request {i+1}/{num_requests} successful in {latency:.2f}s")
-        except requests.exceptions.RequestException as e:
+        except http_requests.exceptions.RequestException as e:
             print(f"Request {i+1}/{num_requests} failed: {e}")
 
     if latencies:
@@ -64,7 +64,7 @@ def run_streaming(host, model, prompt, log_file, **kwargs):
 
     try:
         start_time = time.time()
-        response = requests.post(api_url, json=payload, stream=True, timeout=300)
+        response = http_requests.post(api_url, json=payload, stream=True, timeout=300)
         response.raise_for_status()
 
         first_token_time = None
@@ -104,7 +104,7 @@ def run_streaming(host, model, prompt, log_file, **kwargs):
         else:
             print("\nDid not receive any tokens.")
 
-    except requests.exceptions.RequestException as e:
+    except http_requests.exceptions.RequestException as e:
         print(f"Request failed: {e}")
 
 # A mapping of benchmark names to functions
